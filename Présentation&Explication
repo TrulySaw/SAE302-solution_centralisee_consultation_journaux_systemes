@@ -1,0 +1,158 @@
+1. Introduction
+2. Architecture du système
+3. Authentification et sécurité
+4. Gestion des privilèges et rôles des utilisateurs
+5. Gestion des utilisateurs
+6. Gestion des machines distantes
+---------------
+1. Introduction
+
+1.1 Contexte du projet :
+Ce projet consiste en la création d'une application web permettant la consultation et la gestion centralisée des journaux système (syslog) provenant de plusieurs machines distantes sous GNU/Linux. L'application s'inscrit dans le cadre de la SAE302 et répond à un besoin de surveillance centralisée d'un parc de serveurs.
+Le système permet à des utilisateurs authentifiés de consulter les journaux système de machines distantes depuis une interface web unique, tout en respectant une politique stricte de contrôle d'accès basée sur les rôles.
+
+1.2 Objectifs du projet :
+Les objectifs principaux sont les suivants :
+  - Consultation des journaux de plusieurs machines depuis une interface unique hébergée sur un serveur central,
+  - Implémenter un système d'authentification robuste avec gestion des privilèges selon trois niveaux (utilisateur, gestionnaire, administrateur),
+  - gestion dynamique des utilisateurs et des machines à surveiller,
+  - possibilité d'ajouter d'autres types de journaux.
+
+1.3 Principaux outils :
+  - Backend : Flask (Python 3) pour le serveur web,
+  - Base de données : MariaDB (utilisateurs, machines, rôles),
+  - SQLAlchemy : accès à la base de donnée,
+  - Connexions SSH : Paramiko et Fabric pour la communication sécurisée avec les machines distantes,
+  - Frontend : HTML5 et CSS3 pour l'interface utilisateur,
+  - Moteur de templates : Jinja2 (intégré à Flask) pour la génération dynamique des pages,
+  - Sécurité : Werkzeug pour le hashage sécurisé des mots de passe.
+--------------------------
+2. Architecture du système
+
+2.1 Architecture générale :
+Le système suit une architecture client-serveur à trois niveaux avec communication SSH vers les machines distantes :
+                    ┌─────────────────┐
+                    │  Navigateur Web │  (Interface utilisateur)
+                    └────────┬────────┘
+                             │ HTTP/HTTPS
+                             │
+                    ┌────────▼────────┐
+                    │ Serveur Central │  (Serveur Flask + MariaDB)
+                    │   (Machine 0)   │
+                    └────────┬────────┘
+                             │
+                ┌────────────┼────────────┐
+                │ SSH        │ SSH        │ SSH
+                │            │            │
+         ┌──────▼──────┐ ┌──▼────────┐ ┌─▼──────────┐
+         │  Machine 1  │ │ Machine 2 │ │ Machine 3  │  (Machines distantes)
+         │ GNU/Linux   │ │ GNU/Linux │ │ GNU/Linux  │
+         └─────────────┘ └───────────┘ └────────────┘
+
+2.2 Composants du système :
+
+2.2.1 Serveur central :
+Le serveur central héberge :
+  - Application Flask : serveur web configuré sur le port 5000,
+  - Base de données MariaDB : stockage des utilisateurs, machines et rôles,
+  - Clé SSH privée : stockée dans /home/qamu/.ssh/sae302_key pour l'authentification auprès des machines distantes,
+  - Templates Jinja2 : pages HTML dynamiques dans le dossier templates/
+  - Fichiers CSS : fichier de style pour la mise en page dans static/
+
+Tâches :
+  - Authentifier les utilisateurs et maintenir les sessions,
+  - Aller chercher dans la base de données les informations relatives aux demandes de l'utilisateur,
+  - Établir des connexions SSH vers les machines distantes,
+  - Parser et formater les journaux pour l'affichage,
+  - Gestion des machines distantes et des utilisateurs.
+
+2.2.2 Base de données MariaDB :
+La base de données sae302 contient trois tables principales :
+  - users : informations des utilisateurs,
+  - machines : liste des machines distantes,
+  - role : définition des rôles avec privilèges associés,
+  - privilege : privilèges et définitions.
+
+2.2.3 Machines distantes (Machines 1, 2, 3) :
+Chaque machine distante est un serveur GNU/Linux configuré avec :
+  - Système d'exploitation : GNU/Linux (distribution Debian, Ubuntu...),
+  - Compte utilisateur client : compte dédié à la consultation des logs,
+  - Configuration sudo : permet à l'utilisateur client d'exécuter par exemple : sudo cat /var/log/syslog sans mot de passe, possible pour d'autres journaux comme auth.log, kern.log ou cron.log, 
+  - Serveur SSH : autorise les connexions par clé publique pour l'utilisateur client,
+  - Clé publique : la clé publique correspondant à /home/qamu/.ssh/sae302_key (sae302_key.pub) est ajoutée dans /home/client/.ssh/authorized_keys.
+
+2.3 Fonctionnement général :
+Le processus de consultation d'un journal suit ces étapes précises :
+  - Utilisateur -> Navigateur : l'utilisateur sélectionne une ou plusiers machine(s) et clique sur "Afficher",
+  - Navigateur -> Serveur Flask : requête POST envoyée avec l'IP de la machine sélectionnée,
+  - Serveur Flask -> Base de données : vérification des privilèges de l'utilisateur,
+  - Serveur Flask -> Machine distante : connexion SSH et exécution de la commande sudo suivie d'un cat du/des journal(aux) sélectionné(s),
+  - Machine distante -> Serveur Flask : contenu du journal transmis via SSH,
+  - Serveur Flask : parsing et formatage des données,
+  - Serveur Flask -> Navigateur : génération et envoi de la page HTML avec les journaux,
+  - Navigateur : affichage des logs coupés en différentes parties grâce au parsing.
+-------------------------------
+3. Authentification et sécurité
+
+3.1 Processus d'authentification :
+Le système d'authentification suit ces étapes :
+  - L'utilisateur rentre ses identifiants (stockés dans la table users de la base de donnée sae302),
+  - Les éléments rentrés sont comparés avec ce qui se trouve dans la base de donnée via une requête envoyée par le serveur grâce à la méthode POST,
+  - SQLAlchemy recherche un utilisateur avec le nom et le mot de passe donnés,
+  - Récupération des privilèges associés au rôle l'utilisateur,
+  - Création de la session et redirection vers la page d'accueil.
+
+3.2 Sécurité mise en place :
+  - Un compte Client créé sur les machines distantes et ajouté au groupe sudo ne servant qu'à la consultation des journaux,
+  - Un fichier bash se trouvant dans /usr/local/bin restreignant les commandes sudo pouvant être exécutées à distance sans mot de passe,
+  - Des restrictions sudo dans /etc/sudoers.d/sudo_client, exemple : 
+      dhcp ALL=(client) NOPASSWD: /usr/bin/cat /var/log/syslog
+  - Une authentification par clé privée (sur le serveur central) et clé publique (se trouvant dans /home/client/.ssh/authorized_keys sur les machines distantes).
+---------------------------------------------------
+4. Gestion des privilèges et rôles des utilisateurs
+
+La gestion des rôles et privilèges de chaque utilisateur se fait par le biais de 2 tables présentes dans la base de données : 
+  - La table role : 
+    CREATE TABLE role (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nom VARCHAR(45) NOT NULL,
+        privilege INT NOT NULL
+    );
+  - La table privilege : 
+    CREATE TABLE privilege (
+        id INT PRIMARY KEY NOT NULL,
+        nom VARCHAR(45) NOT NULL
+    );
+  - Dans la table users, on précise à l'aide d'une clé étrangère le rôle de l'utilisateur auquel est associé les privilèges : 
+    CREATE TABLE users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nom VARCHAR(45) NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role INT NOT NULL,
+        FOREIGN KEY (role) REFERENCES role(id)
+    );
+  - Les rôles sont les suivants : 
+    . Un simple utilisateur a comme rôle 1 --> il ne peut qu'accéder aux logs des machines distantes,
+    . Un gestionnaire a comme rôle 3 --> il peut accéder aux logs des machines distantes et gérer ces machines (les modifier, en rajouter/supprimer),
+    . Un administrateur a comme rôle 7 --> il peut accéder aux logs des machines distantes, gérer ces machines et également les utilisateurs (les modifier, en ajouter/supprimer).
+  - Les privilèges sont les suivants :
+    . Un utilisateur se voyant attribuer le rôle 1 aura comme privilège 1 - Consultation des journaux,
+    . Un gestionnaire se voyant attribuer le rôle 3 aura comme privilège 2 - Consultation des journaux et gestion des machines distantes,
+    . Un administrateur se voyant attribuer le rôle 7 aura comme privilège 4 - Consultation des journaux, gestion des machines distantes ainsi que des utilisateurs.
+---------------------------
+5. Gestion des utilisateurs
+
+Un utilisateur disposant des droits d'administration (rôle 3 avec privilège 7) aura la possibilité d'ajouter, modifier, supprimer un utilisateur.
+5.1 Ajouter un utilisateur :
+  - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
+  - Complète les champs obligatoires qui sont le nom d'utilisateur, le mot de passe et sélectionnera le rôle qu'il voudra attribuer à ce nouvel utilisateur,
+  - Clique sur "Ajouter" - cette action va ajouter un utilisateur dans la table "users" de la base de donnée "sae302".
+5.2 Modifier un utilisateur :
+  - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
+  - L'utilisateur voit la liste des utilisateurs présents dans la table "users" et clique sur le bouton "Modifier" se trouvant à côté de chaque utilisateur,
+  - Remplace le contenu des champs qu'il veut modifier par les nouvelles valeurs,
+  - Clique sur "Ajouter" - cette action va mettre à jour dans la table "users" les informations relatives à l'utilisateur en question.
+5.3 Supprimer un utilisateur :
+  - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
+  - L'utilisateur voit la liste des utilisateurs présents dans la table "users" et clique sur le bouton "Supprimer" se trouvant également à côté de chaque utilisateur,
+  - Cette action va supprimer l'utilisateur en question de la base de données (action irréversible, il faudra recréer l'utilisateur en cas de fausse manipulation).
