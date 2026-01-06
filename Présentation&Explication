@@ -107,7 +107,8 @@ Le système d'authentification suit ces étapes :
   - Un fichier bash se trouvant dans /usr/local/bin restreignant les commandes sudo pouvant être exécutées à distance sans mot de passe,
   - Des restrictions sudo dans /etc/sudoers.d/sudo_client, exemple : 
       dhcp ALL=(client) NOPASSWD: /usr/bin/cat /var/log/syslog
-  - Une authentification par clé privée (sur le serveur central) et clé publique (se trouvant dans /home/client/.ssh/authorized_keys sur les machines distantes).
+  - Une authentification par clé privée (sur le serveur central - id_rsa) et clé publique (se trouvant dans /home/client/.ssh/ et qui se nomme id_rsa.pub sur les machines distantes),
+  - Une double authentification par une autre paire de clés privée/publique pour le compte Client se trouvant dans /home/client/.ssh/authorized_keys.
 ---------------------------------------------------
 4. Gestion des privilèges et rôles des utilisateurs
 
@@ -118,11 +119,13 @@ La gestion des rôles et privilèges de chaque utilisateur se fait par le biais 
         nom VARCHAR(45) NOT NULL,
         privilege INT NOT NULL
     );
+
   - La table privilege : 
     CREATE TABLE privilege (
         id INT PRIMARY KEY NOT NULL,
         nom VARCHAR(45) NOT NULL
     );
+
   - Dans la table users, on précise à l'aide d'une clé étrangère le rôle de l'utilisateur auquel est associé les privilèges : 
     CREATE TABLE users (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -131,28 +134,58 @@ La gestion des rôles et privilèges de chaque utilisateur se fait par le biais 
         role INT NOT NULL,
         FOREIGN KEY (role) REFERENCES role(id)
     );
+
   - Les rôles sont les suivants : 
     . Un simple utilisateur a comme rôle 1 --> il ne peut qu'accéder aux logs des machines distantes,
     . Un gestionnaire a comme rôle 3 --> il peut accéder aux logs des machines distantes et gérer ces machines (les modifier, en rajouter/supprimer),
     . Un administrateur a comme rôle 7 --> il peut accéder aux logs des machines distantes, gérer ces machines et également les utilisateurs (les modifier, en ajouter/supprimer).
+
   - Les privilèges sont les suivants :
+    Dans la table privilege de la base de données sae302, les privilèges sont en binaire (puissances de 2) --> on additionne les valeurs des privilèges précédents pour chaque privilège plus élevé :
     . Un utilisateur se voyant attribuer le rôle 1 aura comme privilège 1 - Consultation des journaux,
-    . Un gestionnaire se voyant attribuer le rôle 3 aura comme privilège 2 - Consultation des journaux et gestion des machines distantes,
-    . Un administrateur se voyant attribuer le rôle 7 aura comme privilège 4 - Consultation des journaux, gestion des machines distantes ainsi que des utilisateurs.
+    . Un gestionnaire se voyant attribuer le rôle 2 aura comme privilège 3 (1+2) - Consultation des journaux et gestion des machines distantes,
+    . Un administrateur se voyant attribuer le rôle 3 aura comme privilège 7 (1+2+4) - Consultation des journaux, gestion des machines distantes ainsi que des utilisateurs.
 ---------------------------
 5. Gestion des utilisateurs
 
-Un utilisateur disposant des droits d'administration (rôle 3 avec privilège 7) aura la possibilité d'ajouter, modifier, supprimer un utilisateur.
+Un utilisateur disposant des droits d'administration (rôle 3 avec privilège 1+2+4 = 7) aura la possibilité d'ajouter, modifier, supprimer un utilisateur.
 5.1 Ajouter un utilisateur :
   - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
-  - Complète les champs obligatoires qui sont le nom d'utilisateur, le mot de passe et sélectionnera le rôle qu'il voudra attribuer à ce nouvel utilisateur,
-  - Clique sur "Ajouter" - cette action va ajouter un utilisateur dans la table "users" de la base de donnée "sae302".
+  - Complète les champs obligatoires "Username" et "Password" et sélectionnera le rôle qu'il voudra attribuer à ce nouvel utilisateur,
+  - Clique sur "Ajouter" - cette action va ajouter un utilisateur dans la table "users" de la base de donnée "sae302",
+  - Vérifier que le nouvel utilisateur apparaît bien dans la liste des utilisateurs.
+
 5.2 Modifier un utilisateur :
   - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
-  - L'utilisateur voit la liste des utilisateurs présents dans la table "users" et clique sur le bouton "Modifier" se trouvant à côté de chaque utilisateur,
-  - Remplace le contenu des champs qu'il veut modifier par les nouvelles valeurs,
-  - Clique sur "Ajouter" - cette action va mettre à jour dans la table "users" les informations relatives à l'utilisateur en question.
+  - L'utilisateur voit la liste des utilisateurs (Liste des utilisateurs) et clique sur le bouton "Modifier" se trouvant à côté de chaque utilisateur, il sera redirigé vers une autre page,
+  - Sur cette nouvelle page, il remplace le contenu des champs qu'il veut modifier par les nouvelles valeurs,
+  - Clique sur "Modifier" - cette action va mettre à jour dans la table "users" les informations relatives à l'utilisateur en question.
+  - Vérifie que les modifications aient bien été appliquées.
+
 5.3 Supprimer un utilisateur :
   - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
-  - L'utilisateur voit la liste des utilisateurs présents dans la table "users" et clique sur le bouton "Supprimer" se trouvant également à côté de chaque utilisateur,
+  - L'utilisateur voit la liste des utilisateurs (Liste des serveurs),
+  - Clique sur le bouton "Supprimer" se trouvant également à côté de chaque utilisateur,
   - Cette action va supprimer l'utilisateur en question de la base de données (action irréversible, il faudra recréer l'utilisateur en cas de fausse manipulation).
+---------------------------------
+6. Gestion des machines distantes
+
+Un utilisateurdisposant des droits de gestion (rôle 2 avec privilège 1+2 = 3)
+6.1 Ajouter une machine distante :
+  - L'utilisateur clique sur l'élément "Serveurs" présent dans le header de l'interface de l'application web,
+  - Complète les champs obligatoires "Name" et "IP Address",
+  - Clique sur "Ajouter" - cette action va ajouter la nouvelle machine dans la table "machines",
+  - Vérifie que la machine ajoutée apparaît bien dans la liste des machines.
+
+6.2 Modifier une machine distante :
+  - L'utilisateur clique sur l'élément "Serveurs" présent dans le header de l'interface de l'application web,
+  - Dans la liste des machines distantes devant s'afficher (Liste des serveurs), l'utilisateur clique sur le bouton "Modifier" se trouvant à côté de chaque machine, il sera redirigé vers une nouvelle page,
+  - Sur cette nouvelle page, il peut seulement modifier l'adresse IP de la machine,
+  - Clique sur le bouton "Modifier" - Cette action va modifier dans la table "machines" l'IP correspondant à la machine en question.
+  - Vérifie que les modifications aient bien été appliquées.
+
+6.3 Supprimer une machine distante :
+  - L'utilisateur clique sur l'élément "Serveurs" présent dans le header de l'interface de l'application web,
+  - La liste des machines distantes s'affiche (Liste des serveurs),
+  - Clique sur le bouton "Supprimer" se trouvant à côté de chaque machine,
+  - Cette action va supprimer la machine en question de la base de données (action irréversible, il faudra recréer la machine en cas de fausse manipulation).
