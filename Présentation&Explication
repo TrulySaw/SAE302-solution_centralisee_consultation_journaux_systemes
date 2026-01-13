@@ -1,11 +1,27 @@
 1. Introduction
-2. Architecture du système
-3. Authentification et sécurité
-4. Gestion des privilèges et rôles des utilisateurs
-5. Gestion des utilisateurs
-6. Gestion des machines distantes
+2. Structure de l'application
+3. Architecture du système
+4. Authentification et sécurité
+5. Gestion des privilèges et rôles des utilisateurs
+6. Gestion des utilisateurs
+7. Gestion des machines distantes
 ---------------
 1. Introduction
+
+Ce projet a été réalisé par GROS Axel et DAVY Noah :
+Axel - s'est occupé des parties : 
+- authentification, 
+- privilèges, 
+- gestion des journaux des machines distantes,
+- templates pour l'authentification (login.html) et les journaux (journaux.html, select_journaux.html).
+
+Noah - s'est occupé des parties :
+- modèles de base de données,
+- gestion des utilisateurs, 
+- gestion des machines distantes,
+- templates pour les utilisateurs (users.html, edit_user.html) et les serveurs (serveurs.html, edit_serv.html).
+
+Nous avons travaillé à deux sur le CSS et nous sommes souvent mutuellement corrigé et/ou avons amélioré nos parties.
 
 1.1 Contexte du projet :
 Ce projet consiste en la création d'une application web permettant la consultation et la gestion centralisée des journaux système (syslog) provenant de plusieurs machines distantes sous GNU/Linux. L'application s'inscrit dans le cadre de la SAE302 et répond à un besoin de surveillance centralisée d'un parc de serveurs.
@@ -24,12 +40,43 @@ Les objectifs principaux sont les suivants :
   - SQLAlchemy : accès à la base de donnée,
   - Connexions SSH : Paramiko et Fabric pour la communication sécurisée avec les machines distantes,
   - Frontend : HTML5 et CSS3 pour l'interface utilisateur,
-  - Moteur de templates : Jinja2 (intégré à Flask) pour la génération dynamique des pages,
+  - Moteur de templates : Jinja2 (intégré à Flask) pour les des pages de l'application,
   - Sécurité : Werkzeug pour le hashage sécurisé des mots de passe.
---------------------------
-2. Architecture du système
+-----------------------------
+2. Structure de l'application
 
-2.1 Architecture générale :
+L'application est organisée de cette manière :
+
+├── app                                  
+│   ├── config
+│   │   └── journaux                         # fichier contenant les différents journaux consultables
+│   ├── __init__.py                          # création de l'application, création de l'instance de manipulation de la base de données (db), enregistrement des blueprints
+│   ├── log_check.py                         # fonctions vérifiant l'état de la session (is_log (vérifier que l'utilisateur est authentifié), priv (récupération des privilèges de l'utilisateur connecté)
+│   ├── models.py                            # modèles récupérant les informations des tables de la base de données (Users, Machines, Role)
+│   ├── requirements.txt                     # paquets à installer pour l'application
+│   ├── routes
+│   │   ├── __init__.py                      # importation des routes            
+│   │   ├── auth.py                          # authentification (login, logout)
+│   │   ├── journaux.py                      # visualisation des logs des machines distantes  
+│   │   ├── serveurs.py                      # gestion des machines distantes (modification, ajout, suppression)
+│   │   └── users.py                         # gestion des utilisateurs (modification, ajout, suppression)
+│   ├── static
+│   │   └── styles.css                       # feuille de style en CSS pour la mise en page
+│   └── templates
+│       ├── edit_serv.html                   # page de modification d'une machine distante 
+│       ├── edit_user.html                   # page de modification d'un utilisateur
+│       ├── index.html                       # page d'accueil
+│       ├── journaux.html                    # page affichant les machines et les journaux disponibles
+│       ├── login.html                       # page d'authentification
+│       ├── select_journaux.html             # sélection d'un/plusieurs journal(aux) et de la/des machine(s)
+│       ├── serveurs.html                    # page listant les machines distantes
+│       └── users.html                       # page listant les utilisateurs
+├── config.py                                # paramètres généraux de configuration globale (connexion à la base de données)
+└── run.py                                   # lance le serveur flask avec app.run()
+--------------------------
+3. Architecture du système
+
+3.1 Architecture générale :
 Le système suit une architecture client-serveur à trois niveaux avec communication SSH vers les machines distantes :
                     ┌─────────────────┐
                     │  Navigateur Web │  (Interface utilisateur)
@@ -49,9 +96,9 @@ Le système suit une architecture client-serveur à trois niveaux avec communica
          │ GNU/Linux   │ │ GNU/Linux │ │ GNU/Linux  │
          └─────────────┘ └───────────┘ └────────────┘
 
-2.2 Composants du système :
+3.2 Composants du système :
 
-2.2.1 Serveur central :
+3.2.1 Serveur central :
 Le serveur central héberge :
   - Application Flask : serveur web configuré sur le port 5000,
   - Base de données MariaDB : stockage des utilisateurs, machines et rôles,
@@ -66,14 +113,14 @@ Tâches :
   - Parser et formater les journaux pour l'affichage,
   - Gestion des machines distantes et des utilisateurs.
 
-2.2.2 Base de données MariaDB :
+3.2.2 Base de données MariaDB :
 La base de données sae302 contient trois tables principales :
   - users : informations des utilisateurs,
   - machines : liste des machines distantes,
   - role : définition des rôles avec privilèges associés,
   - privilege : privilèges et définitions.
 
-2.2.3 Machines distantes (Machines 1, 2, 3) :
+3.2.3 Machines distantes (Machines 1, 2, 3) :
 Chaque machine distante est un serveur GNU/Linux configuré avec :
   - Système d'exploitation : GNU/Linux (distribution Debian, Ubuntu...),
   - Compte utilisateur client : compte dédié à la consultation des logs,
@@ -81,7 +128,7 @@ Chaque machine distante est un serveur GNU/Linux configuré avec :
   - Serveur SSH : autorise les connexions par clé publique pour l'utilisateur client,
   - Clé publique : la clé publique correspondant à /home/qamu/.ssh/sae302_key (sae302_key.pub) est ajoutée dans /home/client/.ssh/authorized_keys.
 
-2.3 Fonctionnement général :
+3.3 Fonctionnement général :
 Le processus de consultation d'un journal suit ces étapes précises :
   - Utilisateur -> Navigateur : l'utilisateur sélectionne une ou plusiers machine(s) et clique sur "Afficher",
   - Navigateur -> Serveur Flask : requête POST envoyée avec l'IP de la machine sélectionnée,
@@ -92,9 +139,9 @@ Le processus de consultation d'un journal suit ces étapes précises :
   - Serveur Flask -> Navigateur : génération et envoi de la page HTML avec les journaux,
   - Navigateur : affichage des logs coupés en différentes parties grâce au parsing.
 -------------------------------
-3. Authentification et sécurité
+4. Authentification et sécurité
 
-3.1 Processus d'authentification :
+4.1 Processus d'authentification :
 Le système d'authentification suit ces étapes :
   - L'utilisateur rentre ses identifiants (stockés dans la table users de la base de donnée sae302),
   - Les éléments rentrés sont comparés avec ce qui se trouve dans la base de donnée via une requête envoyée par le serveur grâce à la méthode POST,
@@ -102,7 +149,7 @@ Le système d'authentification suit ces étapes :
   - Récupération des privilèges associés au rôle l'utilisateur,
   - Création de la session et redirection vers la page d'accueil.
 
-3.2 Sécurité mise en place :
+4.2 Sécurité mise en place :
   - Un compte Client créé sur les machines distantes et ajouté au groupe sudo ne servant qu'à la consultation des journaux,
   - Un fichier bash se trouvant dans /usr/local/bin restreignant les commandes sudo pouvant être exécutées à distance sans mot de passe,
   - Des restrictions sudo dans /etc/sudoers.d/sudo_client, exemple : 
@@ -110,7 +157,7 @@ Le système d'authentification suit ces étapes :
   - Une authentification par clé privée (sur le serveur central - id_rsa) et clé publique (se trouvant dans /home/client/.ssh/ et qui se nomme id_rsa.pub sur les machines distantes),
   - Une double authentification par une autre paire de clés privée/publique pour le compte Client se trouvant dans /home/client/.ssh/authorized_keys.
 ---------------------------------------------------
-4. Gestion des privilèges et rôles des utilisateurs
+5. Gestion des privilèges et rôles des utilisateurs
 
 La gestion des rôles et privilèges de chaque utilisateur se fait par le biais de 2 tables présentes dans la base de données : 
   - La table role : 
@@ -146,45 +193,44 @@ La gestion des rôles et privilèges de chaque utilisateur se fait par le biais 
     . Un gestionnaire se voyant attribuer le rôle 2 aura comme privilège 3 (1+2) - Consultation des journaux et gestion des machines distantes,
     . Un administrateur se voyant attribuer le rôle 3 aura comme privilège 7 (1+2+4) - Consultation des journaux, gestion des machines distantes ainsi que des utilisateurs.
 ---------------------------
-5. Gestion des utilisateurs
-
+6. Gestion des utilisateurs
 Un utilisateur disposant des droits d'administration (rôle 3 avec privilège 1+2+4 = 7) aura la possibilité d'ajouter, modifier, supprimer un utilisateur.
-5.1 Ajouter un utilisateur :
+6.1 Ajouter un utilisateur :
   - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
   - Complète les champs obligatoires "Username" et "Password" et sélectionnera le rôle qu'il voudra attribuer à ce nouvel utilisateur,
   - Clique sur "Ajouter" - cette action va ajouter un utilisateur dans la table "users" de la base de donnée "sae302",
   - Vérifier que le nouvel utilisateur apparaît bien dans la liste des utilisateurs.
 
-5.2 Modifier un utilisateur :
+6.2 Modifier un utilisateur :
   - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
   - L'utilisateur voit la liste des utilisateurs (Liste des utilisateurs) et clique sur le bouton "Modifier" se trouvant à côté de chaque utilisateur, il sera redirigé vers une autre page,
   - Sur cette nouvelle page, il remplace le contenu des champs qu'il veut modifier par les nouvelles valeurs,
   - Clique sur "Modifier" - cette action va mettre à jour dans la table "users" les informations relatives à l'utilisateur en question.
   - Vérifie que les modifications aient bien été appliquées.
 
-5.3 Supprimer un utilisateur :
+6.3 Supprimer un utilisateur :
   - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
   - L'utilisateur voit la liste des utilisateurs (Liste des serveurs),
   - Clique sur le bouton "Supprimer" se trouvant également à côté de chaque utilisateur,
   - Cette action va supprimer l'utilisateur en question de la base de données (action irréversible, il faudra recréer l'utilisateur en cas de fausse manipulation).
 ---------------------------------
-6. Gestion des machines distantes
+7. Gestion des machines distantes
 
 Un utilisateurdisposant des droits de gestion (rôle 2 avec privilège 1+2 = 3)
-6.1 Ajouter une machine distante :
+7.1 Ajouter une machine distante :
   - L'utilisateur clique sur l'élément "Serveurs" présent dans le header de l'interface de l'application web,
   - Complète les champs obligatoires "Name" et "IP Address",
   - Clique sur "Ajouter" - cette action va ajouter la nouvelle machine dans la table "machines",
   - Vérifie que la machine ajoutée apparaît bien dans la liste des machines.
 
-6.2 Modifier une machine distante :
+7.2 Modifier une machine distante :
   - L'utilisateur clique sur l'élément "Serveurs" présent dans le header de l'interface de l'application web,
   - Dans la liste des machines distantes devant s'afficher (Liste des serveurs), l'utilisateur clique sur le bouton "Modifier" se trouvant à côté de chaque machine, il sera redirigé vers une nouvelle page,
   - Sur cette nouvelle page, il peut seulement modifier l'adresse IP de la machine,
   - Clique sur le bouton "Modifier" - Cette action va modifier dans la table "machines" l'IP correspondant à la machine en question.
   - Vérifie que les modifications aient bien été appliquées.
 
-6.3 Supprimer une machine distante :
+7.3 Supprimer une machine distante :
   - L'utilisateur clique sur l'élément "Serveurs" présent dans le header de l'interface de l'application web,
   - La liste des machines distantes s'affiche (Liste des serveurs),
   - Clique sur le bouton "Supprimer" se trouvant à côté de chaque machine,
