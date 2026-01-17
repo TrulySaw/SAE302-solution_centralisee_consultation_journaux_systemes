@@ -1,0 +1,21 @@
+{% extends "index.html" %}
+{% block body %}
+<h1>Journaux système</h1>
+
+<table>
+    <tr class="tr1">
+        <th>Date</th>
+        <th>Machine</th>
+        <th>Service</th>
+        <th>Message</th>
+    </tr>
+    {% for j in res %}
+    <tr class="tro">
+        <td class="date">{{ j[0] }}</td>
+        <td class="machine">{{ j[1] }}</td>
+        <td class="service">{{ j[2] }}</td>
+        <td class="data">{{ j[3] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

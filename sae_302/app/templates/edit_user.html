@@ -1,0 +1,24 @@
+{% extends "index.html" %}
+{% block body %}
+<h1>Gestion des utilisateurs</h1>
+
+{% if error %}
+    <p style="color: red;"><b>{{ error }}</b></p>
+{% endif %}
+
+<h2>Modifier l'utilisateur :</h2>
+<form method="POST" action="/edit_user">
+    <input type="hidden" name="id" value="{{ user.id }}">
+    <label for="nom">Username :</label>
+    <input type="text" id="nom" name="nom" value="{{ user.nom }}"><br>
+    <label for="password">Password :</label>
+    <input type="password" id="password" name="password">
+    <br><label for="role">Role :</label>
+    <select name="role">
+        {% for role in roles %}
+        <option value="{{ role.id }}" {% if user.role == role.id %}selected{% endif %}>{{ role.nom }}</option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Modifier"/>
+</form>
+{% endblock %}

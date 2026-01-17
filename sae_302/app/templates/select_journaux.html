@@ -1,0 +1,35 @@
+{% extends "index.html" %}
+{% block body %}
+<h1>Journaux système</h1>
+<form method="POST" action="{{ url_for('journaux.journaux') }}">
+
+<h2>Veuillez sélectionner un/plusieurs type(s) de journal(aux) :</h2>
+<select name="journal">
+    {% for journal in journaux %}
+    <option value="{{ journal }}">{{ journal }}</option>
+    {% endfor %}
+</select>
+
+<h2>Liste des serveurs :</h2>
+<table>
+    <tr>
+        <th>Nom</th>
+        <th>IP</th>
+    </tr>
+    {% for machine in machines %}
+    <tr>
+        <td>{{ machine.nom }}</td>
+        <td>{{ machine.IP }}</td>
+        <td>
+                <input type="checkbox" name="ip" value="{{ machine.IP }}">
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+<input type="submit" value="Afficher">
+</form>
+
+{% if error %}
+    <p style="color: red;"><b>{{ error }}</b></p>
+{% endif %}
+{% endblock %}

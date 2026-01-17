@@ -1,0 +1,18 @@
+{% extends "index.html" %}
+{% block body %}
+<h1>Gestion des machines</h1>
+
+{% if error %}
+    <p style="color: red;"><b>{{ error }}</b></p>
+{% endif %}
+
+<h2>Modifier le serveur :</h2>
+<form method="POST" action="/edit_serv">
+    <label for="nom">Nom :</label>
+    <input type="text" id="nom" value="{{ machine.nom }}" disabled="true"/><br>
+    <input type="hidden" id="nom" name="nom" value="{{ machine.nom }}"/>
+    <label for="ip">IP :</label>
+    <input type="text" id="ip" name="ip" required/>
+    <input type="submit" value="Modifier"/>
+</form>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends "index.html" %}
+{% block body %}
+<h1>Gestion des machines</h1>
+
+<h2>Ajouter un serveur :</h2>
+<form method="POST" action="{{ url_for('serveurs.ajout_serv') }}">
+    <label>Name :</label>
+    <input type="text" name="nom" required/>
+    <label>IP address :</label>
+    <input type="text" name="ip" required/>
+    <input type="submit" value="Ajouter"/>
+</form>
+
+{% if error %}
+    <p style="color: red;"><b>{{ error }}</b></p>
+{% endif %}
+
+<h2>Liste des serveurs :</h2>
+<table>
+    <tr>
+        <th>Nom</th>
+        <th>IP</th>
+    </tr>
+    {% for machine in machines %}
+    <tr>
+        <td>{{ machine.nom }}</td>
+        <td>{{ machine.IP }}</td>
+        <td>
+            <form method="POST" action="{{ url_for('serveurs.suppr_serv') }}">
+                <input type="hidden" name="nom" value="{{ machine.nom }}">
+                <input type="submit" value="Supprimer">
+            </form>
+        </td>
+        <td>
+            <form method="POST" action="{{ url_for('serveurs.edit_serv') }}">
+                <input type="hidden" name="nom" value="{{ machine.nom }}">
+                <input type="submit" value="Modifier">
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

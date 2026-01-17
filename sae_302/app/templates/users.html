@@ -1,0 +1,52 @@
+{% extends "index.html" %}
+{% block body %}
+<h1>Utilisateurs</h1>
+
+<h2>Ajouter un utilisateur :</h2>
+<form method="POST" action="{{ url_for('users.ajout_user') }}">
+    <label>Username :</label>
+    <input type="text" name="username" required/>
+    <label>Password :</label>
+    <input type="password" name="password" required/>
+    <label>Role :</label>
+    <select name="role" required>
+        {% for role in roles %}
+        <option value="{{ role.id }}">{{ role.nom }}</option>
+        {% endfor %}
+    </select>
+    <input type="submit" value="Ajouter"/>
+</form>
+
+{% if error %}
+    <p style="color: red;"><b>{{ error }}</b></p>
+{% endif %}
+
+<h2>Liste des utilisateurs :</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Nom</th>
+        <th>Rôle</th>
+        <th>Action</th>
+    </tr>
+    {% for user in users %}
+    <tr>
+        <td>{{ user.id }}</td>
+        <td>{{ user.nom }}</td>
+        <td>{{ user.role }}</td>
+        {% if user.id != 1 %}
+        <td><form method="POST" action="{{ url_for('users.suppr_user') }}">
+                <input type="hidden" name="id" value="{{ user.id }}">
+                <input type="submit" value="Supprimer">
+            </form>           
+        </td>
+        <td><form method="POST" action="{{ url_for('users.edit_user') }}">
+                <input type="hidden" name="id" value="{{ user.id }}">
+                <input type="submit" value="Modifier">
+            </form>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

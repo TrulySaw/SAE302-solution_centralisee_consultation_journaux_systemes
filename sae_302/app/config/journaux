@@ -1,0 +1,4 @@
+syslog
+auth.log
+kern.log
+cron.log
