@@ -10,7 +10,7 @@ journaux_bp = Blueprint('journaux', __name__)
 @journaux_bp.route("/journaux", methods=["GET", "POST"])
 def journaux():
     """
-    FOnction de vérification d'existence de la session, l'utilisateur ne peut pas accéder 
+    Fonction de vérification d'existence de la session, l'utilisateur ne peut pas accéder 
     au service de consultation de journaux s'il n'est pas au moins utilisateur
     avec privilèges = 1. Grâce à paramiko et fabric, accès distant depuis le compte client
     créé sur les machines distantes.
