@@ -64,7 +64,7 @@ apt install mariadb-server -y
 mariadb
 ```
 
-> [!ATTENTION]
+> [!WARNING]
 > Veuillez à être en root (ou sudo) pour accéder à la base de donnée tant que vous ne créé pas de compte
 
 ## 2.2 Création de la base de donnée et de ses tables
@@ -136,10 +136,10 @@ UPDATE users SET password = 'x' WHERE id = 1;
 ssh-keygen -f ~/.ssh/sae302_key -t rsa
 ```
 
-> [!Attention]
+> [!WARNING]
 > Ne mettez pas de mot de passe
 
-> [!Info]
+> [!NOTE]
 > _La partie 3.2 est à reproduire pour chaque client que vous voulez géré_
 ## 3.2 Création des comptes
 
@@ -175,7 +175,7 @@ client ALL=(root) NOPASSWD: /usr/bin/cat /var/log/cron.log
 
 # 4. Dépannage
 
->[!Info]
+>[!NOTE]
 >La partie "Dépannage" contient des passages en cas de problèmes et des tests de vérification pour vérifier que tout fonctionne
 
 Après l'ajout de chaque client nous vous conseillons de tester la connexion SSH manuellement avec :
