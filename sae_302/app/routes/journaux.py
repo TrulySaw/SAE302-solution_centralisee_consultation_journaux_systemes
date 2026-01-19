@@ -62,7 +62,8 @@ def journaux():
                             data = ""
                             for elem in range(3, len(format)):
                                 data += " " + format[elem]
-                            res.append([date, machine, service, data])      
+                            res.append([date, machine, service, data])
+        # lambda - fonction temporaire pour trier les dates des logs par ordre décroissant
         res.sort(key=lambda x: x[0], reverse=True)
         
         return render_template("/journaux.html", res=res, nom=session["nom"], privilege=session["privilege"])
