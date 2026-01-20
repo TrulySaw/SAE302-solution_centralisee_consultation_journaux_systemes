@@ -5,6 +5,7 @@ from app.models import Machines
 from app.log_check import priv
 import os
 import subprocess
+import socket
 
 journaux_bp = Blueprint('journaux', __name__)
 
@@ -93,6 +94,7 @@ def journaux():
         
         error = None
 
+        # ping pour tester si la VM est allumée
         for ip in ips:
             client = Machines.query.filter_by(IP=ip).first()
             if client:
@@ -102,15 +104,15 @@ def journaux():
                     return handle_error("Host " + client.nom + " unreachable")
             else:
                 return handle_error("Unknown host")
-
+        # boucle de récupération de journaux
         for ip in ips:
             client = Machines.query.filter_by(IP=ip).first()
             try:
                 res = journal_from(client, fich_journal, pkey, res)
-            except fabric.timesout.TimeoutError:
-                return handle_error("Connection to " + client.nom + " timed out")
+            except socket.timeout:
+                return handle_error(f"Connection to {client.nom} timed out")
             except Exception as e:
-                return handle_error(str(e))
+                return handle_error(f"Error with {client.nom}: {str(e)}")
         # lambda - fonction temporaire pour trier les dates des logs par ordre décroissant      
         res.sort(key=lambda x: x[0], reverse=True)
         
