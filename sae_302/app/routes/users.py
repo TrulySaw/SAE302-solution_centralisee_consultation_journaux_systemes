@@ -2,18 +2,16 @@ from flask import Blueprint, render_template, request, redirect, session
 from werkzeug.security import generate_password_hash
 from app import db
 from app.models import Users, Role
-from app.log_check import is_log, priv
+from app.log_check import priv
 
 user_bp = Blueprint('users', __name__)
 
 @user_bp.route("/users", methods=["GET", "POST"])
 def users():
     """
-    Fonction de vérification de l'existence de la session, si l'utilisateur n'est pas un admin
+    Fonction vérifiant si l'utilisateur est un admin, si oui accès, sinon 
     l'accès à la page des utilisateurs est refusé.
-    """
-    if not is_log():
-        return redirect("/login")    
+    """ 
     if not priv(4):
         error = "Error 403 : Access denied"
         return error
@@ -27,11 +25,8 @@ def users():
 @user_bp.route("/edit_user", methods=["GET", "POST"])
 def edit_user():
     """
-    Fonction de modification des informations d'un utilisateur, vérifiant avant tout que la session 
-    existe et vérifie les privilège de l'utilisateur (admin). 
+    Fonction de modification des informations d'un utilisateur, vérifiant les privilège de l'utilisateur (admin). 
     """
-    if not is_log():
-        return redirect("/login")    
     if not priv(4):
         return redirect("/")   
     if request.form.get("id"):
@@ -73,9 +68,7 @@ def edit_user():
 def suppr_user():
     """
     Fonction de suppression d'un utilisateur, besoin des droits admins également.
-    """
-    if not is_log():
-        return redirect("/login")    
+    """ 
     if not priv(4):
         return redirect("/")   
     if request.form.get("id"):
@@ -98,9 +91,7 @@ def ajout_user():
     """
     Fonction d'ajout d'un utilisateur, l'administrateur devra renseigner son nom,
     lui créer un mot de passe et sélectionner son rôle parmi les 3 disponibles.
-    """
-    if not is_log():
-        return redirect("/login")   
+    """ 
     if not priv(4):
         return redirect("/")
     
