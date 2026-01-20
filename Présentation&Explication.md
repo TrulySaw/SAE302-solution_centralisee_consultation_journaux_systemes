@@ -9,6 +9,7 @@
 1. Introduction
 
 Ce projet a été réalisé par GROS Axel et DAVY Noah :
+
 Axel - s'est occupé des parties : 
 - authentification, 
 - privilèges, 
