@@ -64,9 +64,8 @@ def handle_error(error):
 @journaux_bp.route("/journaux", methods=["GET", "POST"])
 def journaux():
     """
-    Fonction de vérification d'existence de la session, l'utilisateur ne peut pas accéder 
-    au service de consultation de journaux s'il n'est pas au moins utilisateur
-    avec privilèges = 1. Grâce à paramiko et fabric, accès distant depuis le compte client
+    Fonction vérifiant les pribilèges de l'utilisateur, si au moins utilisateur, alors accès autorisé,
+    sinon redirect sur la page d'accueil. Grâce à paramiko et fabric, accès distant depuis le compte client
     créé sur les machines distantes.
     """
     if not priv(1):
