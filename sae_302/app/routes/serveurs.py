@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, session
 from ipaddress import IPv4Address
 from app import db
 from app.models import Machines
-from app.log_check import is_log, priv
+from app.log_check import priv
 
 serveurs_bp = Blueprint('serveurs', __name__)
 
@@ -12,8 +12,6 @@ def serveurs():
     Fonction qui vérifie l'existence de la session, si l'utilisateur n'est pas au
     moins un gestionnaire, l'accès à la page est refusée.
     """
-    if not is_log():
-        return redirect("/login")   
     if not priv(2):
         error = "Error 403 : Access denied"
         return error
@@ -29,8 +27,6 @@ def edit_serv():
     Fonction de vérification des privilèges et de session pour modifier un serveur, l'utilisateur doit également
     être au moins gestionnaire. Il pourra seulement modifier l'adresse IP.
     """
-    if not is_log():
-        return redirect("/login")    
     if not priv(2):
         return redirect("/")  
     if request.form.get("nom"):
@@ -65,8 +61,6 @@ def suppr_serv():
     Fonction de suppression d'un serveur distant de la base de donnée, vérifie à nouveau la session et les 
     privilèges de l'utilisateur.
     """
-    if not is_log():
-        return redirect("/login")    
     if not priv(2):
         return redirect("/")   
     if request.form.get("nom"):
@@ -88,8 +82,6 @@ def ajout_serv():
     Fonction d'ajout d'un serveur, l'utilisateur rentre le nom et l'IP qui 
     doit être dans un format valide.
     """
-    if not is_log():
-        return redirect("/login")   
     if not priv(2):
         return redirect("/")   
     nom = request.form.get("nom")
