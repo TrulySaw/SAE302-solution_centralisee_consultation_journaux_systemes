@@ -9,8 +9,8 @@ serveurs_bp = Blueprint('serveurs', __name__)
 @serveurs_bp.route("/serveurs", methods=["GET", "POST"])
 def serveurs():
     """
-    Fonction qui vérifie si l'utilisateur est gestionnaire ou non, si oui accès autorisé, sinon
-    l'accès à la page est refusé.
+    Fonction qui vérifie l'existence de la session, si l'utilisateur n'est pas au
+    moins un gestionnaire, l'accès à la page est refusée.
     """
     if not priv(2):
         error = "Error 403 : Access denied"
@@ -24,9 +24,9 @@ def serveurs():
 @serveurs_bp.route("/edit_serv", methods=["GET", "POST"])
 def edit_serv():
     """
-    Fonction de vérification des privilèges pour modifier un serveur, l'utilisateur doit également
+    Fonction de vérification des privilèges et de session pour modifier un serveur, l'utilisateur doit également
     être au moins gestionnaire. Il pourra seulement modifier l'adresse IP.
-    """
+    """  
     if not priv(2):
         return redirect("/")  
     if request.form.get("nom"):
@@ -58,9 +58,9 @@ def edit_serv():
 @serveurs_bp.route("/del_serv", methods=["POST"])
 def suppr_serv():
     """
-    Fonction de suppression d'un serveur distant de la base de donnée, vérifie les 
+    Fonction de suppression d'un serveur distant de la base de donnée, vérifie à nouveau la session et les 
     privilèges de l'utilisateur.
-    """
+    """  
     if not priv(2):
         return redirect("/")   
     if request.form.get("nom"):
@@ -107,6 +107,5 @@ def ajout_serv():
         db.session.add(machine)
         db.session.commit()
     except Exception as e:
-        return redirect(f"/serveurs?error=Internal error : {e}")
-    
+        return redirect(f"/serveurs?error=Internal error : {e}")   
     return redirect("/serveurs")
