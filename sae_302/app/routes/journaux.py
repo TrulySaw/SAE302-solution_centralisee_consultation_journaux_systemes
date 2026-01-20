@@ -93,7 +93,6 @@ def journaux():
         ips = request.form.getlist("ip")
         
         error = None
-
         # ping pour tester si la VM est allumée
         for ip in ips:
             client = Machines.query.filter_by(IP=ip).first()
