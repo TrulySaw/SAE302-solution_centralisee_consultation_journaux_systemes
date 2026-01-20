@@ -64,8 +64,9 @@ def handle_error(error):
 @journaux_bp.route("/journaux", methods=["GET", "POST"])
 def journaux():
     """
-    Fonction vérifiant les pribilèges de l'utilisateur, si au moins utilisateur, alors accès autorisé,
-    sinon redirect sur la page d'accueil. Grâce à paramiko et fabric, accès distant depuis le compte client
+    Fonction de vérification d'existence de la session, l'utilisateur ne peut pas accéder 
+    au service de consultation de journaux s'il n'est pas au moins utilisateur
+    avec privilèges = 1. Grâce à paramiko et fabric, accès distant depuis le compte client
     créé sur les machines distantes.
     """
     if not priv(1):
@@ -106,8 +107,10 @@ def journaux():
             client = Machines.query.filter_by(IP=ip).first()
             try:
                 res = journal_from(client, fich_journal, pkey, res)
+            except fabric.timesout.TimeoutError:
+                return handle_error("Connection to " + client.nom + " timed out")
             except Exception as e:
-                return handle_error(str(e))   
+                return handle_error(str(e))
         # lambda - fonction temporaire pour trier les dates des logs par ordre décroissant      
         res.sort(key=lambda x: x[0], reverse=True)
         
