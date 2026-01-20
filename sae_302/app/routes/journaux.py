@@ -2,10 +2,64 @@ from flask import Blueprint, render_template, request, redirect, session, curren
 import paramiko
 import fabric
 from app.models import Machines
-from app.log_check import is_log, priv
+from app.log_check import priv
 import os
+import subprocess
 
 journaux_bp = Blueprint('journaux', __name__)
+
+def get_journaux():
+    config_path = os.path.join(current_app.root_path, 'config', 'journaux')
+    with open(config_path, 'r') as cnf:
+        journaux = []
+        ljournaux = cnf.readlines()
+        for ljournal in ljournaux:
+            ljournal = ljournal.strip()
+            journaux.append('/var/log/' + ljournal)
+    return journaux
+
+def ping(ip):
+    try:
+        ping = subprocess.run(
+            ['ping', '-c', '1', '-W', '1', ip],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=2)
+        fping = ping.returncode
+    except Exception:
+        return False
+    if fping != 0:
+        return False
+    else:
+        return True
+
+def journal_from(client, fich_journal, pkey, res):
+    """
+    Récupération du journal distant via fabric
+    Et ajout dans la liste res des logs formatés
+    """
+    with fabric.Connection(host=client.IP, user="client", connect_kwargs={"pkey": pkey, "timeout": 3}) as cnx:
+        journal = cnx.run(f"sudo cat {fich_journal}", hide=True).stdout
+        contenu = journal.split('\n')
+        for log in contenu:
+            format = log.split(" ")
+            if len(format) >= 4:
+                date = format[0]
+                machine = format[1]
+                service = format[2]
+                data = ""
+                for elem in range(3, len(format)):
+                    data += " " + format[elem]
+                res.append([date, machine, service, data])
+    return res
+
+def handle_error(error):
+    if error:
+        lmachines = Machines.query.all()
+        journaux = get_journaux()
+        return render_template("/select_journaux.html", error=error, journaux=journaux, machines=lmachines, nom=session["nom"], privilege=session["privilege"])
+    else:
+        return None
 
 @journaux_bp.route("/journaux", methods=["GET", "POST"])
 def journaux():
@@ -15,18 +69,11 @@ def journaux():
     avec privilèges = 1. Grâce à paramiko et fabric, accès distant depuis le compte client
     créé sur les machines distantes.
     """
-    if not is_log():
-        return redirect("/login")   
     if not priv(1):
         return redirect("/")
     
-    config_path = os.path.join(current_app.root_path, 'config', 'journaux')
-    with open(config_path, 'r') as cnf:
-        journaux = []
-        ljournaux = cnf.readlines()
-        for ljournal in ljournaux:
-            ljournal = ljournal.strip()
-            journaux.append('/var/log/' + ljournal)   
+    journaux = get_journaux()
+    
     if request.method == "POST":
         ip_check = request.form.getlist("ip")       
         if not ip_check:
@@ -44,26 +91,25 @@ def journaux():
         pkey = paramiko.RSAKey.from_private_key_file(os.getenv("HOME") + "/.ssh/sae302_key")
         ips = request.form.getlist("ip")
         
+        error = None
+
         for ip in ips:
             client = Machines.query.filter_by(IP=ip).first()
             if client:
-                # grâce au module fabric, connection aux machines clients - hôte IP machine - user - client
-                # afin d'exécuter la commande cat pour récupérer le contenu des fichiers de logs
-                with fabric.Connection(host=client.IP, user="client", connect_kwargs={"pkey": pkey}) as cnx:
-                    journal = cnx.run(f"sudo cat {fich_journal}", hide=True).stdout
-                    contenu = journal.split('\n')
-                    
-                    for log in contenu:
-                        format = log.split(" ")
-                        if len(format) >= 4:
-                            date = format[0]
-                            machine = format[1]
-                            service = format[2]
-                            data = ""
-                            for elem in range(3, len(format)):
-                                data += " " + format[elem]
-                            res.append([date, machine, service, data])
-        # lambda - fonction temporaire pour trier les dates des logs par ordre décroissant
+                if ping(ip):
+                    continue
+                else:
+                    return handle_error("Host " + client.nom + " unreachable")
+            else:
+                return handle_error("Unknown host")
+
+        for ip in ips:
+            client = Machines.query.filter_by(IP=ip).first()
+            try:
+                res = journal_from(client, fich_journal, pkey, res)
+            except Exception as e:
+                return handle_error(str(e))   
+        # lambda - fonction temporaire pour trier les dates des logs par ordre décroissant      
         res.sort(key=lambda x: x[0], reverse=True)
         
         return render_template("/journaux.html", res=res, nom=session["nom"], privilege=session["privilege"])
