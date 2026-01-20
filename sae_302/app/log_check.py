@@ -1,3 +1,4 @@
+import app
 from flask import session
 
 def is_log():
