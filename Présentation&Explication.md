@@ -5,7 +5,7 @@
 5. Gestion des privilèges et rôles des utilisateurs
 6. Gestion des utilisateurs
 7. Gestion des machines distantes
----------------
+---
 1. Introduction
 
 Ce projet a été réalisé par GROS Axel et DAVY Noah :
@@ -42,42 +42,44 @@ Les objectifs principaux sont les suivants :
   - Frontend : HTML5 et CSS3 pour l'interface utilisateur,
   - Moteur de templates : Jinja2 (intégré à Flask) pour les des pages de l'application,
   - Sécurité : Werkzeug pour le hashage sécurisé des mots de passe.
------------------------------
+---
 2. Structure de l'application
 
 L'application est organisée de cette manière :
-
+```
 ├── app                                  
-│   ├── config
-│   │   └── journaux                         # fichier contenant les différents journaux consultables
-│   ├── __init__.py                          # création de l'application, création de l'instance de manipulation de la base de données (db), enregistrement des blueprints
-│   ├── log_check.py                         # fonctions vérifiant l'état de la session (is_log (vérifier que l'utilisateur est authentifié), priv (récupération des privilèges de l'utilisateur connecté)
-│   ├── models.py                            # modèles récupérant les informations des tables de la base de données (Users, Machines, Role)
-│   ├── requirements.txt                     # paquets à installer pour l'application
-│   ├── routes
-│   │   ├── __init__.py                      # importation des routes            
-│   │   ├── auth.py                          # authentification (login, logout)
-│   │   ├── journaux.py                      # visualisation des logs des machines distantes  
-│   │   ├── serveurs.py                      # gestion des machines distantes (modification, ajout, suppression)
-│   │   └── users.py                         # gestion des utilisateurs (modification, ajout, suppression)
-│   ├── static
-│   │   └── styles.css                       # feuille de style en CSS pour la mise en page
-│   └── templates
-│       ├── edit_serv.html                   # page de modification d'une machine distante 
-│       ├── edit_user.html                   # page de modification d'un utilisateur
-│       ├── index.html                       # page d'accueil
-│       ├── journaux.html                    # page affichant les machines et les journaux disponibles
-│       ├── login.html                       # page d'authentification
-│       ├── select_journaux.html             # sélection d'un/plusieurs journal(aux) et de la/des machine(s)
-│       ├── serveurs.html                    # page listant les machines distantes
-│       └── users.html                       # page listant les utilisateurs
+│   ├── config
+│   │   └── journaux                         # fichier contenant les différents journaux consultables
+│   ├── __init__.py                          # création de l'application, création de l'instance de manipulation de la base de données (db), enregistrement des blueprints
+│   ├── log_check.py                         # fonctions vérifiant l'état de la session (is_log (vérifier que l'utilisateur est authentifié), priv (récupération des privilèges de l'utilisateur connecté)
+│   ├── models.py                            # modèles récupérant les informations des tables de la base de données (Users, Machines, Role)
+│   ├── requirements.txt                     # paquets à installer pour l'application
+│   ├── routes
+│   │   ├── __init__.py                      # importation des routes            
+│   │   ├── auth.py                          # authentification (login, logout)
+│   │   ├── journaux.py                      # visualisation des logs des machines distantes  
+│   │   ├── serveurs.py                      # gestion des machines distantes (modification, ajout, suppression)
+│   │   └── users.py                         # gestion des utilisateurs (modification, ajout, suppression)
+│   ├── static
+│   │   └── styles.css                       # feuille de style en CSS pour la mise en page
+│   └── templates
+│       ├── edit_serv.html                   # page de modification d'une machine distante 
+│       ├── edit_user.html                   # page de modification d'un utilisateur
+│       ├── index.html                       # page d'accueil
+│       ├── journaux.html                    # page affichant les machines et les journaux disponibles
+│       ├── login.html                       # page d'authentification
+│       ├── select_journaux.html             # sélection d'un/plusieurs journal(aux) et de la/des machine(s)
+│       ├── serveurs.html                    # page listant les machines distantes
+│       └── users.html                       # page listant les utilisateurs
 ├── config.py                                # paramètres généraux de configuration globale (connexion à la base de données)
 └── run.py                                   # lance le serveur flask avec app.run()
---------------------------
+```
+---
 3. Architecture du système
 
 3.1 Architecture générale :
 Le système suit une architecture client-serveur à trois niveaux avec communication SSH vers les machines distantes :
+```
                     ┌─────────────────┐
                     │  Navigateur Web │  (Interface utilisateur)
                     └────────┬────────┘
@@ -95,7 +97,7 @@ Le système suit une architecture client-serveur à trois niveaux avec communica
          │  Machine 1  │ │ Machine 2 │ │ Machine 3  │  (Machines distantes)
          │ GNU/Linux   │ │ GNU/Linux │ │ GNU/Linux  │
          └─────────────┘ └───────────┘ └────────────┘
-
+```
 3.2 Composants du système :
 
 3.2.1 Serveur central :
@@ -138,7 +140,7 @@ Le processus de consultation d'un journal suit ces étapes précises :
   - Serveur Flask : parsing et formatage des données,
   - Serveur Flask -> Navigateur : génération et envoi de la page HTML avec les journaux,
   - Navigateur : affichage des logs coupés en différentes parties grâce au parsing.
--------------------------------
+---
 4. Authentification et sécurité
 
 4.1 Processus d'authentification :
@@ -156,7 +158,7 @@ Le système d'authentification suit ces étapes :
       dhcp ALL=(client) NOPASSWD: /usr/bin/cat /var/log/syslog
   - Une authentification par clé privée (sur le serveur central - id_rsa) et clé publique (se trouvant dans /home/client/.ssh/ et qui se nomme id_rsa.pub sur les machines distantes),
   - Une double authentification par une autre paire de clés privée/publique pour le compte Client se trouvant dans /home/client/.ssh/authorized_keys.
----------------------------------------------------
+---
 5. Gestion des privilèges et rôles des utilisateurs
 
 La gestion des rôles et privilèges de chaque utilisateur se fait par le biais de 2 tables présentes dans la base de données : 
@@ -192,7 +194,7 @@ La gestion des rôles et privilèges de chaque utilisateur se fait par le biais 
     . Un utilisateur se voyant attribuer le rôle 1 aura comme privilège 1 - Consultation des journaux,
     . Un gestionnaire se voyant attribuer le rôle 2 aura comme privilège 3 (1+2) - Consultation des journaux et gestion des machines distantes,
     . Un administrateur se voyant attribuer le rôle 3 aura comme privilège 7 (1+2+4) - Consultation des journaux, gestion des machines distantes ainsi que des utilisateurs.
----------------------------
+---
 6. Gestion des utilisateurs
 Un utilisateur disposant des droits d'administration (rôle 3 avec privilège 1+2+4 = 7) aura la possibilité d'ajouter, modifier, supprimer un utilisateur.
 6.1 Ajouter un utilisateur :
@@ -213,7 +215,7 @@ Un utilisateur disposant des droits d'administration (rôle 3 avec privilège 1+
   - L'utilisateur voit la liste des utilisateurs (Liste des serveurs),
   - Clique sur le bouton "Supprimer" se trouvant également à côté de chaque utilisateur,
   - Cette action va supprimer l'utilisateur en question de la base de données (action irréversible, il faudra recréer l'utilisateur en cas de fausse manipulation).
----------------------------------
+---
 7. Gestion des machines distantes
 
 Un utilisateurdisposant des droits de gestion (rôle 2 avec privilège 1+2 = 3)
