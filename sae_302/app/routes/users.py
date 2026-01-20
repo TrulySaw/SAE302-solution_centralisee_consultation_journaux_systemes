@@ -9,9 +9,9 @@ user_bp = Blueprint('users', __name__)
 @user_bp.route("/users", methods=["GET", "POST"])
 def users():
     """
-    Fonction vérifiant si l'utilisateur est un admin, si oui accès, sinon 
+    Fonction de vérification de l'existence de la session, si l'utilisateur n'est pas un admin
     l'accès à la page des utilisateurs est refusé.
-    """ 
+    """  
     if not priv(4):
         error = "Error 403 : Access denied"
         return error
@@ -25,8 +25,9 @@ def users():
 @user_bp.route("/edit_user", methods=["GET", "POST"])
 def edit_user():
     """
-    Fonction de modification des informations d'un utilisateur, vérifiant les privilège de l'utilisateur (admin). 
-    """
+    Fonction de modification des informations d'un utilisateur, vérifiant avant tout que la session 
+    existe et vérifie les privilège de l'utilisateur (admin). 
+    """ 
     if not priv(4):
         return redirect("/")   
     if request.form.get("id"):
@@ -68,7 +69,7 @@ def edit_user():
 def suppr_user():
     """
     Fonction de suppression d'un utilisateur, besoin des droits admins également.
-    """ 
+    """   
     if not priv(4):
         return redirect("/")   
     if request.form.get("id"):
@@ -114,6 +115,5 @@ def ajout_user():
         db.session.add(user)
         db.session.commit()
     except Exception as e:
-        return redirect(f"/users?error=Internal error : {e}")
-    
+        return redirect(f"/users?error=Internal error : {e}")    
     return redirect("/users")
