@@ -66,7 +66,7 @@ def handle_error(error):
 def journaux():
     """
     Fonction qui vérifie les privilèges de l'utilisateur. Grâce à paramiko on récupère la clé sur les machines
-    distantes et d'un ping pour vérifier que la vm est allumée.
+    distantes et ping pour vérifier que la vm est allumée.
     """
     if not priv(1):
         return redirect("/")
