@@ -65,7 +65,7 @@ def handle_error(error):
 @journaux_bp.route("/journaux", methods=["GET", "POST"])
 def journaux():
     """
-    Fonction qui vérifie les privilèges de l'utilisateur Grâce à paramiko on récupère la clé sur les machines
+    Fonction qui vérifie les privilèges de l'utilisateur. Grâce à paramiko on récupère la clé sur les machines
     distantes et d'un ping pour vérifier que la vm est allumée.
     """
     if not priv(1):
