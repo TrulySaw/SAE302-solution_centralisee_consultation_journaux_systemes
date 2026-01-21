@@ -3,7 +3,7 @@
 <h1>Journaux système</h1>
 <form method="POST" action="{{ url_for('journaux.journaux') }}">
 
-<h2>Veuillez sélectionner un/plusieurs journal(aux) :</h2>
+<h2>Veuillez sélectionner un journal :</h2>
 <select name="journal">
     {% for journal in journaux %}
     <option value="{{ journal }}">{{ journal }}</option>
