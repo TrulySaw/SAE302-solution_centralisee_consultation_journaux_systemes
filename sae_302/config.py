@@ -1,4 +1,4 @@
-# parametres de configuration globaux
+# paramètres de configuration globaux
 class Config():
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
