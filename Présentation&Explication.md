@@ -149,7 +149,7 @@ Le système d'authentification suit ces étapes :
   - L'utilisateur rentre ses identifiants (stockés dans la table users de la base de donnée sae302),
   - Les éléments rentrés sont comparés avec ce qui se trouve dans la base de donnée via une requête envoyée par le serveur grâce à la méthode POST,
   - SQLAlchemy recherche un utilisateur avec le nom et le mot de passe donnés,
-  - Récupération des privilèges associés au rôle l'utilisateur,
+  - Récupération des privilèges associés au rôle de l'utilisateur,
   - Création de la session et redirection vers la page d'accueil.
 
 4.2 Sécurité mise en place :
