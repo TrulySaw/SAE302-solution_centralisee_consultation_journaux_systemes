@@ -88,7 +88,7 @@ def journaux():
             fich_journal = "/var/log/syslog"
         
         res = []
-        # recuperation de la cle privee sur le serveur central pour l'authentification du compte client
+        # récuperation de la clé privée sur le serveur central pour l'authentification du compte client
         # sur les machines distantes
         pkey = paramiko.RSAKey.from_private_key_file(os.getenv("HOME") + "/.ssh/sae302_key")
         ips = request.form.getlist("ip")
