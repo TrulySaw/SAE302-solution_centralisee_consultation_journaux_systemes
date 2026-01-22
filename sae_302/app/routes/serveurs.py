@@ -24,7 +24,7 @@ def serveurs():
 @serveurs_bp.route("/edit_serv", methods=["GET", "POST"])
 def edit_serv():
     """
-    Fonction de vérification des privilèges et de session pour modifier un serveur, l'utilisateur doit également
+    Fonction de vérification des privilèges pour modifier un serveur, l'utilisateur doit également
     être au moins gestionnaire. Il pourra seulement modifier l'adresse IP.
     """  
     if not priv(2):
@@ -58,7 +58,7 @@ def edit_serv():
 @serveurs_bp.route("/del_serv", methods=["POST"])
 def suppr_serv():
     """
-    Fonction de suppression d'un serveur distant de la base de donnée, vérifie à nouveau la session et les 
+    Fonction de suppression d'un serveur distant de la base de donnée, vérifie à nouveau les 
     privilèges de l'utilisateur.
     """  
     if not priv(2):
