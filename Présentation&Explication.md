@@ -197,7 +197,9 @@ La gestion des rôles et privilèges de chaque utilisateur se fait par le biais 
     . Un administrateur se voyant attribuer le rôle 3 aura comme privilège 7 (1+2+4) - Consultation des journaux, gestion des machines distantes ainsi que des utilisateurs.
 ---
 6. Gestion des utilisateurs
+7. 
 Un utilisateur disposant des droits d'administration (rôle 3 avec privilège 1+2+4 = 7) aura la possibilité d'ajouter, modifier, supprimer un utilisateur.
+
 6.1 Ajouter un utilisateur :
   - L'utilisateur clique sur l'élément "Utilisateurs" présent dans le header de l'interface de l'application web,
   - Complète les champs obligatoires "Username" et "Password" et sélectionnera le rôle qu'il voudra attribuer à ce nouvel utilisateur,
