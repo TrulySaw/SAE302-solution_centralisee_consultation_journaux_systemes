@@ -9,7 +9,7 @@ user_bp = Blueprint('users', __name__)
 @user_bp.route("/users", methods=["GET", "POST"])
 def users():
     """
-    Fonction de vérification de l'existence de la session, si l'utilisateur n'est pas un admin
+    Fonction vérifiant le rôle de l'utilisateur, si l'utilisateur n'est pas un admin
     l'accès à la page des utilisateurs est refusé.
     """  
     if not priv(4):
@@ -25,8 +25,7 @@ def users():
 @user_bp.route("/edit_user", methods=["GET", "POST"])
 def edit_user():
     """
-    Fonction de modification des informations d'un utilisateur, vérifiant avant tout que la session 
-    existe et vérifie les privilège de l'utilisateur (admin). 
+    Fonction de modification des informations d'un utilisateur, vérifiant les privilège de l'utilisateur (admin). 
     """ 
     if not priv(4):
         return redirect("/")   
