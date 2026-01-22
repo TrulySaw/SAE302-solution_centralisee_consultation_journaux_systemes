@@ -13,14 +13,14 @@ Installer le dossier et décompressez le s'il est sous forme d'archive ou clonez
 Clonage :
 ```bash
 apt install git python3-pip
-cd sae_302
 git clone https://github.com/TrulySaw/SAE302-solution_centralisee_consultation_journaux_systemes
+cd sae_302
 ```
 Unzip :
 ```bash
 apt install unzip
+unzip sae_302.zip
 cd sae_302
-unzip sae302.zip
 ```
 
 ```bash
