@@ -20,6 +20,9 @@ def get_journaux():
     return journaux
 
 def ping(ip):
+    """
+    ping pour vérifier que la machine est allumée.
+    """
     try:
         ping = subprocess.run(
             ['ping', '-c', '1', '-W', '1', ip],
@@ -66,7 +69,7 @@ def handle_error(error):
 def journaux():
     """
     Fonction qui vérifie les privilèges de l'utilisateur. Grâce à paramiko on récupère la clé sur les machines
-    distantes et ping pour vérifier que la vm est allumée.
+    distantes.
     """
     if not priv(1):
         return redirect("/")
