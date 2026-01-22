@@ -12,6 +12,7 @@
 Installer le dossier et décompressez le s'il est sous forme d'archive ou clonez le
 Clonage :
 ```bash
+apt install git
 git clone https://github.com/TrulySaw/SAE302-solution_centralisee_consultation_journaux_systemes
 cd sae_302
 ```
@@ -23,8 +24,7 @@ cd sae_302
 ```
 
 ```bash
-apt install python3.11-venv
-apt install git python3-pip
+apt install python3.11-venv python3-pip
 python3 -m venv Journaux
 .\Journaux\bin\activate
 ```
